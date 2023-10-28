@@ -35,7 +35,7 @@ async def _callbacks(bot: Client, callback_query: CallbackQuery):
                 now_user_info = await now_user_client.get_me()
 
             auth_user_client[user_id] = now_user_client
-            await now_user_client.send_message(chat_id, "当前登录用户:" + now_user_info.mention)
+            await bot.send_message(chat_id, "当前登录用户:" + now_user_info.mention)
 
         await download(bot, now_user_client, callback_query.message)
 
