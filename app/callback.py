@@ -25,7 +25,7 @@ async def _callbacks(bot: Client, callback_query: CallbackQuery):
 
         else:
             await callback_query.answer(
-                "请注意，想要下载受保护的内容需要模拟您的d",
+                "请注意，想要下载受保护的内容需要进行登录操作（Bot是存在极限的）",
                 show_alert=True)
             now_user_client = await user_auth(bot, callback_query.message)
             try:
