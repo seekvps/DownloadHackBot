@@ -1,0 +1,8 @@
+python-dotenv
+SQLAlchemy
+psycopg2
+Telethon
+pyromod
+TgCrypto
+pyrogram
+ethon
