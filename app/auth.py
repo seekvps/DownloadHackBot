@@ -42,7 +42,7 @@ async def download(bot: Client, user: Client, msg: Message):
     link_url = link_url.text
     pprint(link_url)
 
-    file_name = str(user_id) + "/" + hashlib.md5(link_url.encode(encoding='UTF-8')).hexdigest()
+    file_name = str(user_id)
     # if file_name in DownloadList:
     #     await bot.send_message(user_id,"您有一个相同的正在下载中")
     #     return
