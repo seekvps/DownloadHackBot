@@ -39,6 +39,12 @@ async def _callbacks(bot: Client, callback_query: CallbackQuery):
 
         await download(bot, now_user_client, callback_query.message)
 
+    if query == 'download_normal':
+        chat_id = callback_query.from_user.id
+        message_id = callback_query.message.id
+
+        await download(bot, bot, callback_query.message, True)
+
     if query == 'home':
         chat_id = callback_query.from_user.id
         message_id = callback_query.message.id

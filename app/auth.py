@@ -34,7 +34,7 @@ from app.progress import progress_for_pyrogram
 DownloadList = {}
 
 
-async def download(bot: Client, user: Client, msg: Message):
+async def download(bot: Client, user: Client, msg: Message, use_bot=False):
     user_id = msg.chat.id
     link_url = await bot.ask(user_id, "请输入TG分享链接（需要包含多媒体）", filters=filters.text)
     if await cancelled(link_url):
@@ -50,7 +50,7 @@ async def download(bot: Client, user: Client, msg: Message):
     msg_id = int(link_url.split("/")[-1]) + int(0)
 
     if 't.me' not in link_url:
-        await bot.send_message(user_id,"请提供正确的分享地址，其中要包含字符串 't.me/' ")
+        await bot.send_message(user_id, "请提供正确的分享地址，其中要包含字符串 't.me/' ")
 
     chat = link_url.split("/")[-2]
     if "t.me/c/" in link_url:
@@ -60,10 +60,14 @@ async def download(bot: Client, user: Client, msg: Message):
     edit = await bot.edit_message_text(send_message.chat.id, send_message.id, "正在努力下载...")
 
     try:
-        msg = await user.get_messages(chat, msg_id)
+        now_client = user
+        if use_bot:
+            now_client = bot
+
+        msg = await now_client.get_messages(chat, msg_id)
 
         if msg.media == MessageMediaType.VIDEO:
-            file = await user.download_media(
+            file = await now_client.download_media(
                 msg,
                 file_name="downloads/" + file_name + "/",
                 progress=progress_for_pyrogram,

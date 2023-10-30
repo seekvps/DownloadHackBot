@@ -2,7 +2,10 @@ from pyrogram.types import InlineKeyboardButton
 
 
 class Data:
-    generate_single_button = [InlineKeyboardButton("🔥 开始 🔥", callback_data="download")]
+    generate_single_button = [
+        InlineKeyboardButton("🔥 受保护内容下载（需要登录） 🔥", callback_data="download"),
+        InlineKeyboardButton("🔥 普通文件下载（不需要登录） 🔥", callback_data="download_normal"),
+    ]
 
     home_buttons = [
         generate_single_button,
