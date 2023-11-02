@@ -188,7 +188,7 @@ async def user_auth(bot: Client, msg: Message, force=False):
     if user_session_str is not None:
         pprint(user_session_str)
         try:
-            auth_user_client = Client(name=f"user_{user_id}", session_string=user_session_str, in_memory=False)
+            auth_user_client = Client(name=f"user_{user_id}", session_string=user_session_str, in_memory=False, workers=20)
             return auth_user_client
         except Exception as e:
             auth_user_client = None
@@ -200,6 +200,7 @@ async def user_auth(bot: Client, msg: Message, force=False):
     send_message = await bot.send_message(user_id, f"若要继续使用需要您进行登录操作。")
     await bot.delete_messages(user_id, send_message.id)
     api_id_msg = await bot.ask(user_id, '请输入您的 `API_ID`', filters=filters.text)
+    # await api_id_msg.request.delete()
     if await cancelled(api_id_msg):
         return
     try:

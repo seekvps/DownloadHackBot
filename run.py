@@ -17,7 +17,8 @@ app = Client(
     api_hash=env.API_HASH,
     bot_token=env.BOT_TOKEN,
     in_memory=False,
-    plugins={'root':'app'}
+    plugins={'root':'app'},
+    workers=20
 )
 
 if __name__ == "__main__":
