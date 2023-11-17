@@ -1,7 +1,10 @@
-import hashlib
+import json
 import os
+import rich.json
 import time
 from asyncio.exceptions import TimeoutError
+
+from rich import print_json
 
 from run import iRedis
 from ethon.pyfunc import video_metadata
@@ -34,8 +37,8 @@ from app.progress import progress_for_pyrogram
 DownloadList = {}
 
 
-async def download(bot: Client, user: Client, msg: Message, use_bot=False):
-    user_id = msg.chat.id
+async def download(bot: Client, user: Client, recv_msg: Message, use_bot=False):
+    user_id = recv_msg.chat.id
     link_url = await bot.ask(user_id, "请输入TG分享链接（需要包含多媒体）", filters=filters.text)
     if await cancelled(link_url):
         return
@@ -59,102 +62,115 @@ async def download(bot: Client, user: Client, msg: Message, use_bot=False):
     send_message = await bot.send_message(user_id, "开始下载...")
     edit = await bot.edit_message_text(send_message.chat.id, send_message.id, "正在努力下载...")
 
+    now_client = user
+    if use_bot:
+        now_client = bot
+
+    raw_msg = None
+
     try:
-        now_client = user
-        if use_bot:
-            now_client = bot
+        raw_msg = await now_client.get_media_group(chat, msg_id)
+    except Exception as e:
+        if "The message doesn't belong to a media group" in str(e):
+            raw_msg = await now_client.get_messages(chat, msg_id)
 
-        msg = await now_client.get_messages(chat, msg_id)
+    file_list = []
 
-        if msg.media == MessageMediaType.VIDEO:
-            file = await now_client.download_media(
-                msg,
-                file_name="downloads/" + file_name + "/",
-                progress=progress_for_pyrogram,
-                progress_args=(
-                    bot,
-                    "**下载中:**\n",
-                    edit,
-                    time.time()
-                )
-            )
+    if isinstance(raw_msg, list):
+        for single_msg in raw_msg:
+            file_list.append(single_msg)
+    else:
+        file_list.append(raw_msg)
 
-            # DownloadList[file_name] = file_name
+    media_arr = [MessageMediaType.VIDEO, MessageMediaType.PHOTO, MessageMediaType.VIDEO_NOTE]
 
-            pprint(file)
-            await edit.edit('正在准备转发')
-            caption = None
-            if msg.caption is not None:
-                caption = msg.caption
+    try:
+        for msg in file_list:
+            if msg.media in media_arr:
+                caption = None
+                if msg.caption is not None:
+                    caption = msg.caption
 
-            if msg.media == MessageMediaType.VIDEO_NOTE:
-                round_message = True
-                print("Trying to get metadata")
-                data = video_metadata(file)
-                height, width, duration = data["height"], data["width"], data["duration"]
-                try:
-                    thumb_path = await screenshot(file, duration, user_id)
-                except Exception:
-                    thumb_path = None
-
-                await bot.send_video_note(
-                    chat_id=send_message.chat.id,
-                    video_note=file,
-                    length=height, duration=duration,
-                    thumb=thumb_path,
-                    progress=progress_for_pyrogram,
-                    progress_args=(
-                        bot,
-                        '**正在转发中:**\n',
-                        edit,
-                        time.time()
+                if msg.media == MessageMediaType.PHOTO:
+                    await edit.edit('正在准备下载')
+                    file = await now_client.download_media(
+                        msg,
+                        file_name="downloads/" + file_name + "/",
+                        progress=progress_for_pyrogram,
+                        progress_args=(
+                            bot,
+                            "**下载中:**\n",
+                            edit,
+                            time.time()
+                        )
                     )
-                )
-            if msg.media == MessageMediaType.VIDEO:
-                data = video_metadata(file)
-                height, width, duration = data["height"], data["width"], data["duration"]
-                try:
-                    thumb_path = await screenshot(file, duration, user_id)
-                except Exception:
-                    thumb_path = None
-                await bot.send_video(
-                    chat_id=send_message.chat.id,
-                    video=file,
-                    caption=caption,
-                    supports_streaming=True,
-                    height=height, width=width, duration=duration,
-                    thumb=thumb_path,
-                    progress=progress_for_pyrogram,
-                    progress_args=(
-                        bot,
-                        '**正在转发中:**\n',
-                        edit,
-                        time.time()
-                    )
-                )
 
-            if msg.media == MessageMediaType.PHOTO:
-                await edit.edit("正在转发中")
-                await bot.send_photo(
-                    chat_id=send_message.chat.id,
-                    photo=file,
-                    caption=caption,
-                    progress=progress_for_pyrogram,
-                    progress_args=(
-                        bot,
-                        '**正在转发中:**\n',
-                        edit,
-                        time.time()
-                    )
-                )
+                    await edit.edit('正在准备转发')
+                    await edit.edit("正在转发中")
 
-            try:
-                os.remove(file)
-                if os.path.isfile(file):
-                    os.remove(file)
-            except Exception:
-                pass
-            await edit.delete()
+                    await bot.send_photo(
+                        chat_id=send_message.chat.id,
+                        photo=file,
+                        caption=caption,
+                        progress=progress_for_pyrogram,
+                        progress_args=(
+                            bot,
+                            '**正在转发中:**\n',
+                            edit,
+                            time.time()
+                        )
+                    )
+
+                    try:
+                        os.remove(file)
+                        if os.path.isfile(file):
+                            os.remove(file)
+                    except Exception:
+                        pass
+
+                if msg.media == MessageMediaType.VIDEO:
+
+                    await edit.edit('正在准备下载')
+                    file = await now_client.download_media(
+                        msg,
+                        file_name="downloads/" + file_name + "/",
+                        progress=progress_for_pyrogram,
+                        progress_args=(
+                            bot,
+                            "**下载中:**\n",
+                            edit,
+                            time.time()
+                        )
+                    )
+                    data = video_metadata(file)
+                    height, width, duration = data["height"], data["width"], data["duration"]
+                    try:
+                        thumb_path = await screenshot(file, duration, user_id)
+                    except Exception:
+                        thumb_path = None
+                    await bot.send_video(
+                        chat_id=send_message.chat.id,
+                        video=file,
+                        caption=caption,
+                        supports_streaming=True,
+                        height=height, width=width, duration=duration,
+                        thumb=thumb_path,
+                        progress=progress_for_pyrogram,
+                        progress_args=(
+                            bot,
+                            '**正在转发中:**\n',
+                            edit,
+                            time.time()
+                        )
+                    )
+
+                    try:
+                        os.remove(file)
+                        if os.path.isfile(file):
+                            os.remove(file)
+                    except Exception:
+                        pass
+        await edit.delete()
     except ChannelBanned:
         await edit.edit("您貌似被频道屏蔽了")
         return
@@ -188,7 +204,11 @@ async def user_auth(bot: Client, msg: Message, force=False):
     if user_session_str is not None:
         pprint(user_session_str)
         try:
-            auth_user_client = Client(name=f"user_{user_id}", session_string=user_session_str, in_memory=False, workers=20)
+            auth_user_client = Client(
+                name=f"user_{user_id}",
+                session_string=user_session_str,
+                in_memory=False,
+                workers=20)
             return auth_user_client
         except Exception as e:
             auth_user_client = None
@@ -240,7 +260,9 @@ async def user_auth(bot: Client, msg: Message, force=False):
 
     try:
         phone_code_msg = await bot.ask(user_id,
-                                       "Telegram官方账号将会发送OTP验证码，如果您收到登录验证码, 请按照以下格式发送. \n 例如登录验证码为 `12345`, **请一定按照如下格式发送** `1 2 3 4 5`.",
+                                       "Telegram官方账号将会发送OTP验证码，"
+                                       "如果您收到登录验证码, 请按照以下格式发送. "
+                                       "\n 例如登录验证码为 `12345`, **请一定按照如下格式发送** `1 2 3 4 5`.",
                                        filters=filters.text, timeout=600)
         if await cancelled(phone_code_msg):
             return

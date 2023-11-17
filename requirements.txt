@@ -6,3 +6,5 @@ pyromod
 TgCrypto
 pyrogram
 ethon
+redis
+rich
