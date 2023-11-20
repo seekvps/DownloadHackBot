@@ -46,9 +46,6 @@ async def download(bot: Client, user: Client, recv_msg: Message, use_bot=False):
     pprint(link_url)
 
     file_name = str(user_id)
-    # if file_name in DownloadList:
-    #     await bot.send_message(user_id,"您有一个相同的正在下载中")
-    #     return
 
     msg_id = int(link_url.split("/")[-1]) + int(0)
 
@@ -168,6 +165,11 @@ async def download(bot: Client, user: Client, recv_msg: Message, use_bot=False):
                         os.remove(file)
                         if os.path.isfile(file):
                             os.remove(file)
+
+                        os.remove(thumb_path)
+                        if os.path.isfile(thumb_path):
+                            os.remove(thumb_path)
+
                     except Exception:
                         pass
         await edit.delete()
