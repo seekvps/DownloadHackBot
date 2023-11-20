@@ -1,4 +1,5 @@
-from app.auth import user_auth, download
+from app import download
+from app.auth import user_auth
 from app.data import Data
 from pyrogram import Client
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup
@@ -37,13 +38,13 @@ async def _callbacks(bot: Client, callback_query: CallbackQuery):
             auth_user_client[user_id] = now_user_client
             await bot.send_message(chat_id, "当前登录用户:" + now_user_info.mention)
 
-        await download(bot, now_user_client, callback_query.message)
+        await download.run(bot, now_user_client, callback_query.message)
 
     if query == 'download_normal':
         chat_id = callback_query.from_user.id
         message_id = callback_query.message.id
 
-        await download(bot, bot, callback_query.message, True)
+        await download.run(bot, bot, callback_query.message, True)
 
     if query == 'home':
         chat_id = callback_query.from_user.id

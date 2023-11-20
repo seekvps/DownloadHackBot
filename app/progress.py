@@ -25,8 +25,8 @@ async def progress_for_pyrogram(
         status = DOWNLOAD_LOCATION + "/status.json"
         if os.path.exists(status):
             with open(status, 'r+') as f:
-                statusMsg = json.load(f)
-                if not statusMsg["running"]:
+                status_msg = json.load(f)
+                if not status_msg["running"]:
                     bot.stop_transmission()
         speed = current / diff
         elapsed_time = round(diff) * 1000

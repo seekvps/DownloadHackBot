@@ -2,9 +2,9 @@ from pyrogram.errors import FloodWait, InviteHashInvalid, InviteHashExpired, Use
 
 import asyncio, re, os, time
 from datetime import datetime as dt
+from app.data import Data
+from pyrogram.types import InlineKeyboardMarkup
 
-
-# Join private chat-------------------------------------------------------------------------------------------------------------
 
 async def join(client, invite_link):
     try:
@@ -21,8 +21,6 @@ async def join(client, invite_link):
         return "Could not join, try joining manually."
 
 
-# Regex---------------------------------------------------------------------------------------------------------------
-# to get the url from event
 
 def get_link(string):
     regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
@@ -36,8 +34,6 @@ def get_link(string):
     except Exception:
         return False
 
-
-# Screenshot---------------------------------------------------------------------------------------------------------------
 
 def hhmmss(seconds):
     x = time.strftime('%H:%M:%S', time.gmtime(seconds))
@@ -71,3 +67,16 @@ async def screenshot(video, duration, sender):
         return out
     else:
         None
+
+
+async def cancelled(msg):
+    if "/cancel" in msg.text:
+        await msg.reply("取消操作!", quote=True, reply_markup=InlineKeyboardMarkup(Data.generate_button))
+        return True
+    elif msg.text.startswith("/"):  # Bot Commands
+        await msg.reply("取消操作", quote=True)
+        return True
+    else:
+        return False
+
+
