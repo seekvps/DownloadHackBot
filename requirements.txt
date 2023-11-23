@@ -1,10 +1,6 @@
-python-dotenv
-SQLAlchemy
-psycopg2
-Telethon
-pyromod
-TgCrypto
-pyrogram
-ethon
-redis
-rich
+python-dotenv==1.0.0
+TgCrypto==1.2.5
+pyrogram==2.0.106
+ethon==0.1.5
+redis==5.0.1
+rich==13.7.0

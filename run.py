@@ -1,10 +1,7 @@
-from pprint import pprint
-
 from app import env
 import logging
 import redis
 from pyrogram import Client, idle
-from pyromod import listen  # type: ignore
 from pyrogram.errors import ApiIdInvalid, ApiIdPublishedFlood, AccessTokenInvalid
 
 iRedis = redis.StrictRedis(decode_responses=True)
