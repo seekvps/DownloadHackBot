@@ -1,20 +1,21 @@
-FROM python:3.11.2-alpine As compile-image
+FROM python:3.11.2
 
 WORKDIR /app
 
-COPY requirements.txt /app/
+COPY requirements.txt /app
 
-RUN apk add --no-cache --virtual ffmpeg redis libpq-dev \
-     && pip install --trusted-host pypi.python.org -r requirements.txt \
-     && apk del .build-deps && rm -rf requirements.txt \
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    redis  \
+    ffmpeg \
+    build-essential
 
-FROM python:3.11.2-alpine As runtime-image
+RUN pip install setuptools
 
-WORKDIR /app
+RUN pip install --no-cache-dir -r requirements.txt
 
-
-COPY .env run.py /app/
 COPY app /app/app
+COPY downloads /app/downloads
 
 CMD ["python", "run.py"]
 
